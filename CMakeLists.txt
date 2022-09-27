@@ -30,17 +30,21 @@ else()
 endif()
 find_package(PCL REQUIRED)
 find_package(Ceres REQUIRED)
+find_package(OpenCV 4.2 REQUIRED)
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS} 
+  include/peac
+  ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(
   include
+  ${OpenCV_LIBRARY_DIRS}
   ${PCL_LIBRARY_DIRS}
   ${CERES_LIBRARY_DIRS}
 )
@@ -55,7 +59,7 @@ catkin_package(
 
 
 add_executable(floam_laser_processing_node src/laserProcessingNode.cpp src/laserProcessingClass.cpp src/lidar.cpp)
-target_link_libraries(floam_laser_processing_node ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(floam_laser_processing_node ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(floam_odom_estimation_node src/odomEstimationNode.cpp src/lidarOptimization.cpp src/lidar.cpp src/odomEstimationClass.cpp)
 target_link_libraries(floam_odom_estimation_node ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})

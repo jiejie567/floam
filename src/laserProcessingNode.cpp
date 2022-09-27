@@ -64,13 +64,17 @@ void laser_processing(){
 
             std::chrono::time_point<std::chrono::system_clock> start, end;
             start = std::chrono::system_clock::now();
-            laserProcessing.featureExtraction(pointcloud_in,pointcloud_edge,pointcloud_surf);
+            laserProcessing.featureExtraction2(pointcloud_in,pointcloud_edge,pointcloud_surf);
+//            laserProcessing.featureExtraction(pointcloud_in,pointcloud_edge,pointcloud_surf);
+            std::cout << "pc_out_surf.size() =" << pointcloud_surf->size() << std::endl;
+            std::cout << "pointcloud_edge.size() =" << pointcloud_edge->size() << std::endl;
+
             end = std::chrono::system_clock::now();
             std::chrono::duration<float> elapsed_seconds = end - start;
             total_frame++;
             float time_temp = elapsed_seconds.count() * 1000;
             total_time+=time_temp;
-            //ROS_INFO("average laser processing time %f ms \n \n", total_time/total_frame);
+            ROS_INFO("average laser processing time %f ms \n \n", total_time/total_frame);
 
             sensor_msgs::PointCloud2 laserCloudFilteredMsg;
             pcl::PointCloud<pcl::PointXYZI>::Ptr pointcloud_filtered(new pcl::PointCloud<pcl::PointXYZI>());  
@@ -108,18 +112,24 @@ int main(int argc, char **argv)
 
     int scan_line = 64;
     double vertical_angle = 2.0;
+    double horizontal_angle_resolution = 0.09;
     double scan_period= 0.1;
     double max_dis = 60.0;
     double min_dis = 2.0;
 
+
     nh.getParam("/scan_period", scan_period); 
-    nh.getParam("/vertical_angle", vertical_angle); 
+    nh.getParam("/vertical_angle", vertical_angle);
+    nh.getParam("/horizontal_angle_resolution", horizontal_angle_resolution);
+//    nh.getParam("/ang_bottom", ang_bottom);
     nh.getParam("/max_dis", max_dis);
     nh.getParam("/min_dis", min_dis);
     nh.getParam("/scan_line", scan_line);
 
+
     lidar_param.setScanPeriod(scan_period);
     lidar_param.setVerticalAngle(vertical_angle);
+    lidar_param.setHorizontalResolution(horizontal_angle_resolution);
     lidar_param.setLines(scan_line);
     lidar_param.setMaxDistance(max_dis);
     lidar_param.setMinDistance(min_dis);

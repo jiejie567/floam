@@ -84,9 +84,11 @@ void odom_estimation(){
                 is_odom_inited = true;
                 ROS_INFO("odom inited");
             }else{
+                std::cout<<25<<std::endl;
                 std::chrono::time_point<std::chrono::system_clock> start, end;
                 start = std::chrono::system_clock::now();
                 odomEstimation.updatePointsToMap(pointcloud_edge_in, pointcloud_surf_in);
+                std::cout<<22<<std::endl;
                 end = std::chrono::system_clock::now();
                 std::chrono::duration<float> elapsed_seconds = end - start;
                 total_frame++;
@@ -122,6 +124,7 @@ void odom_estimation(){
             laserOdometry.pose.pose.position.z = t_current.z();
             pubLaserOdometry.publish(laserOdometry);
 
+            std::cout<<24<<std::endl;
         }
         //sleep 2 ms every time
         std::chrono::milliseconds dura(2);

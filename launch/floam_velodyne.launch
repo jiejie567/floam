@@ -2,7 +2,7 @@
 <launch>
 
     <!-- launch your velodyne here -->
-    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+<!--    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>-->
     
     <!-- For Velodyne VLP-16 -->
     <param name="scan_line" value="16" />
@@ -18,7 +18,7 @@
 
     <!--- Sim Time -->
     <param name="scan_period" value="0.1" />
-
+    <param name="horizontal_angle_resolution" type="double" value="0.2" />
     <param name="vertical_angle" type="double" value="2.0" />
     <param name="map_resolution" type="double" value="0.2" />
     <param name="max_dis" type="double" value="90.0" />
@@ -41,5 +41,6 @@
         <param name="/trajectory_update_rate" value="10.0" />
         <param name="/trajectory_publish_rate" value="10.0" />
     </node>
+    <node pkg="rosbag" type="play" name="rosbag_play" args="--clock /home/jeff/Downloads/Dataset/velodyne.bag"/>
 
 </launch>

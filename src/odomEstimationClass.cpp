@@ -10,7 +10,7 @@ void OdomEstimationClass::init(lidar::Lidar lidar_param, double map_resolution){
     laserCloudSurfMap = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>());
 
     //downsampling size
-    downSizeFilterEdge.setLeafSize(map_resolution, map_resolution, map_resolution);
+    downSizeFilterEdge.setLeafSize(map_resolution*2, map_resolution*2, map_resolution*2);
     downSizeFilterSurf.setLeafSize(map_resolution * 2, map_resolution * 2, map_resolution * 2);
 
     //kd-tree
@@ -33,6 +33,7 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZI
 
     if(optimization_count>2)
         optimization_count--;
+    std::cout<<30<<std::endl;
 
     Eigen::Isometry3d odom_prediction = odom * (last_odom.inverse() * odom);
     last_odom = odom;
@@ -44,6 +45,7 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZI
     pcl::PointCloud<pcl::PointXYZI>::Ptr downsampledEdgeCloud(new pcl::PointCloud<pcl::PointXYZI>());
     pcl::PointCloud<pcl::PointXYZI>::Ptr downsampledSurfCloud(new pcl::PointCloud<pcl::PointXYZI>());
     downSamplingToMap(edge_in,downsampledEdgeCloud,surf_in,downsampledSurfCloud);
+    std::cout<<"downsampledEdgeCloud"<<downsampledEdgeCloud->size()<<std::endl;
     //ROS_WARN("point nyum%d,%d",(int)downsampledEdgeCloud->points.size(), (int)downsampledSurfCloud->points.size());
     if(laserCloudCornerMap->points.size()>10 && laserCloudSurfMap->points.size()>50){
         kdtreeEdgeMap->setInputCloud(laserCloudCornerMap);
@@ -54,10 +56,13 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZI
             ceres::Problem::Options problem_options;
             ceres::Problem problem(problem_options);
 
+
             problem.AddParameterBlock(parameters, 7, new PoseSE3Parameterization());
-            
+
             addEdgeCostFactor(downsampledEdgeCloud,laserCloudCornerMap,problem,loss_function);
+
             addSurfCostFactor(downsampledSurfCloud,laserCloudSurfMap,problem,loss_function);
+
 
             ceres::Solver::Options options;
             options.linear_solver_type = ceres::DENSE_QR;
@@ -66,7 +71,6 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZI
             options.check_gradients = false;
             options.gradient_check_relative_precision = 1e-4;
             ceres::Solver::Summary summary;
-
             ceres::Solve(options, &problem, &summary);
 
         }
@@ -76,6 +80,7 @@ void OdomEstimationClass::updatePointsToMap(const pcl::PointCloud<pcl::PointXYZI
     odom = Eigen::Isometry3d::Identity();
     odom.linear() = q_w_curr.toRotationMatrix();
     odom.translation() = t_w_curr;
+
     addPointsToMap(downsampledEdgeCloud,downsampledSurfCloud);
 
 }
@@ -95,7 +100,8 @@ void OdomEstimationClass::downSamplingToMap(const pcl::PointCloud<pcl::PointXYZI
     downSizeFilterEdge.setInputCloud(edge_pc_in);
     downSizeFilterEdge.filter(*edge_pc_out);
     downSizeFilterSurf.setInputCloud(surf_pc_in);
-    downSizeFilterSurf.filter(*surf_pc_out);    
+    downSizeFilterSurf.filter(*surf_pc_out);
+
 }
 
 void OdomEstimationClass::addEdgeCostFactor(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc_in, const pcl::PointCloud<pcl::PointXYZI>::Ptr& map_in, ceres::Problem& problem, ceres::LossFunction *loss_function){
@@ -107,16 +113,20 @@ void OdomEstimationClass::addEdgeCostFactor(const pcl::PointCloud<pcl::PointXYZI
 
         std::vector<int> pointSearchInd;
         std::vector<float> pointSearchSqDis;
-        kdtreeEdgeMap->nearestKSearch(point_temp, 5, pointSearchInd, pointSearchSqDis); 
-        if (pointSearchSqDis[4] < 1.0)
+        kdtreeEdgeMap->nearestKSearch(point_temp, 5, pointSearchInd, pointSearchSqDis);
+        if (pointSearchSqDis[4] < 1.0 &&pointSearchSqDis[4]!=0)
         {
             std::vector<Eigen::Vector3d> nearCorners;
             Eigen::Vector3d center(0, 0, 0);
             for (int j = 0; j < 5; j++)
             {
+//                std::cout<<"jj"<<pointSearchInd[j]<<std::endl;
+//                std::cout<<"bb"<<pointSearchSqDis[j]<<std::endl;
+
                 Eigen::Vector3d tmp(map_in->points[pointSearchInd[j]].x,
                                     map_in->points[pointSearchInd[j]].y,
                                     map_in->points[pointSearchInd[j]].z);
+
                 center = center + tmp;
                 nearCorners.push_back(tmp);
             }
@@ -139,15 +149,14 @@ void OdomEstimationClass::addEdgeCostFactor(const pcl::PointCloud<pcl::PointXYZI
                 Eigen::Vector3d point_a, point_b;
                 point_a = 0.1 * unit_direction + point_on_line;
                 point_b = -0.1 * unit_direction + point_on_line;
-
-                ceres::CostFunction *cost_function = new EdgeAnalyticCostFunction(curr_point, point_a, point_b);  
+                ceres::CostFunction *cost_function = new EdgeAnalyticCostFunction(curr_point, point_a, point_b);
                 problem.AddResidualBlock(cost_function, loss_function, parameters);
-                corner_num++;   
+                corner_num++;
             }                           
         }
     }
     if(corner_num<20){
-        printf("not enough correct points");
+        printf("not enough correct edge points \n");
     }
 
 }
@@ -202,7 +211,7 @@ void OdomEstimationClass::addSurfCostFactor(const pcl::PointCloud<pcl::PointXYZI
 
     }
     if(surf_num<20){
-        printf("not enough correct points");
+        printf("not enough correct surf points \n");
     }
 
 }

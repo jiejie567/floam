@@ -23,7 +23,9 @@ void lidar::Lidar::setVerticalAngle(double vertical_angle_in){
 void lidar::Lidar::setVerticalResolution(double vertical_angle_resolution_in){
     vertical_angle_resolution = vertical_angle_resolution_in;
 }
-
+void lidar::Lidar::setHorizontalResolution(double horizontal_angle_resolution_in){
+    horizontal_angle_resolution = horizontal_angle_resolution_in;
+}
 
 void lidar::Lidar::setScanPeriod(double scan_period_in){
     scan_period = scan_period_in;
@@ -37,3 +39,7 @@ void lidar::Lidar::setMaxDistance(double max_distance_in){
 void lidar::Lidar::setMinDistance(double min_distance_in){
 	min_distance = min_distance_in;
 }
+
+//void lidar::Lidar::setAngBottom(double ang_bottom_in){
+//    ang_bottom = ang_bottom_in;
+//}

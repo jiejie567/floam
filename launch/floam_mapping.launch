@@ -2,7 +2,7 @@
 <launch>
 
     
-    <node pkg="rosbag" type="play" name="rosbag_play" args="--clock -r 0.5 $(env HOME)/Downloads/2011_09_30_0018.bag"/> 
+    <node pkg="rosbag" type="play" name="rosbag_play" args="--clock -r 1 $(env HOME)/Downloads/Dataset/kitti/2011_09_30_0018.bag"/> 
     
     <!-- For Velodyne VLP-16 
     <param name="scan_line" value="16" />
@@ -21,6 +21,7 @@
 
     <param name="vertical_angle" type="double" value="2.0" />
     <param name="max_dis" type="double" value="90.0" />
+    <param name="horizontal_angle_resolution" type="double" value="0.2" />
     <param name="map_resolution" type="double" value="0.4" />
     <param name="min_dis" type="double" value="3.0" />
     <!--- -->
